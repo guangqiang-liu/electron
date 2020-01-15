@@ -241,6 +241,34 @@ struct Converter<std::vector<T>> {
   }
 };
 
+template <typename T1, typename T2>
+struct Converter<std::pair<T1, T2>> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   const std::pair<T1, T2>& val) {
+    v8::Local<v8::Array> result(v8::Array::New(isolate, 2));
+    auto context = isolate->GetCurrentContext();
+    result->Set(context, 0, Converter<T1>::ToV8(isolate, val.first)).Check();
+    result->Set(context, 1, Converter<T2>::ToV8(isolate, val.second)).Check();
+    return result;
+  }
+  static bool FromV8(v8::Isolate* isolate,
+                     v8::Local<v8::Value> val,
+                     std::pair<T1, T2>* out) {
+    if (!val->IsArray())
+      return false;
+
+    v8::Local<v8::Array> array(v8::Local<v8::Array>::Cast(val));
+    if (array->Length() != 2)
+      return false;
+
+    auto context = isolate->GetCurrentContext();
+    return Converter<T1>::FromV8(
+               isolate, array->Get(context, 0).ToLocalChecked(), &out->first) &&
+           Converter<T2>::FromV8(
+               isolate, array->Get(context, 1).ToLocalChecked(), &out->second);
+  }
+};
+
 template <typename T>
 struct Converter<std::set<T>> {
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,

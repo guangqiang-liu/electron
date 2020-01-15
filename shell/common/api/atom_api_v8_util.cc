@@ -28,30 +28,6 @@ struct hash<std::pair<Type1, Type2>> {
 
 }  // namespace std
 
-namespace mate {
-
-template <typename Type1, typename Type2>
-struct Converter<std::pair<Type1, Type2>> {
-  static bool FromV8(v8::Isolate* isolate,
-                     v8::Local<v8::Value> val,
-                     std::pair<Type1, Type2>* out) {
-    if (!val->IsArray())
-      return false;
-
-    v8::Local<v8::Array> array(v8::Local<v8::Array>::Cast(val));
-    if (array->Length() != 2)
-      return false;
-
-    auto context = isolate->GetCurrentContext();
-    return Converter<Type1>::FromV8(
-               isolate, array->Get(context, 0).ToLocalChecked(), &out->first) &&
-           Converter<Type2>::FromV8(
-               isolate, array->Get(context, 1).ToLocalChecked(), &out->second);
-  }
-};
-
-}  // namespace mate
-
 namespace {
 
 v8::Local<v8::Value> GetHiddenValue(v8::Isolate* isolate,
